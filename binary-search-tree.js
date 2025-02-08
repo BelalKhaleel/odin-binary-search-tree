@@ -122,6 +122,25 @@ class Tree {
     const { currentNode } = this.findNodeAndParent(value)
     return currentNode;
   }
+  levelOrder(callback) {
+    if (!this.root) {
+      throw new Error("The tree is empty.");
+    }
+    if (typeof callback !== 'function') {
+      throw new Error("A callback is required as argument for this function.");
+    }
+    const queue = [this.root];
+    while(queue.length > 0) {
+      const currentNode = queue.shift();
+      callback(currentNode);
+      if (currentNode.left !== null) {
+        queue.push(currentNode.left);
+      }
+      if (currentNode.right !== null) {
+        queue.push(currentNode.right);
+      }
+    }
+  }
 }
 
 const prettyPrint = (node, prefix = "", isLeft = true) => {
@@ -146,5 +165,7 @@ tree.insert(9)
 tree.insert(1)
 tree.insert(8)
 // tree.deleteItem(5)
-console.log(tree.find(2))
+// console.log(tree.find(2))
 prettyPrint(tree.root);
+
+tree.levelOrder(node => console.log(node.data));
