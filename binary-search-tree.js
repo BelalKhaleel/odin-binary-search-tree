@@ -56,16 +56,7 @@ class Tree {
   }
   insert(value) {
     const newNode = new Node(value);
-    let currentNode = this.root;
-    let parent = null;
-    while(currentNode) {
-      parent = currentNode;
-      if (value < currentNode.data) {
-        currentNode = currentNode.left;
-      } else {
-        currentNode = currentNode.right;
-      }
-    }
+    const { parent } = this.findNodeAndParent(value);
     if (value < parent.data) {
       parent.left = newNode;
     } else {
@@ -73,36 +64,34 @@ class Tree {
     }
   }
   deleteItem(value) {
-    let currentNode = this.root;
-    let parent = null;
-    while(currentNode.data !== value) {
-      parent = currentNode;
-      if (value < currentNode.data) {
-        currentNode = currentNode.left;
-      } else {
-        currentNode = currentNode.right;
-      }
+    const { currentNode, parent } = this.findNodeAndParent(value);
+    // Node not found
+    if (!currentNode) {
+      console.log("Value not found in the tree.");
+      return;
     }
-    //deleting a leaf node
+    // deleting a leaf node
     if (!currentNode.left && !currentNode.right) {
-      if (value < parent.data) {
+      if (!parent) {
+        this.root = null; // Deleting the root node
+      } else if (value < parent.data) {
         parent.left = null;
       } else {
         parent.right = null;
-      }   
+      }
+      return;
     }
-    //deleting a node with a single child
-    if ( (currentNode.left && !currentNode.right) || (!currentNode.left && currentNode.right) ) {
-      if(currentNode.left) {
-        currentNode = currentNode.left;
+    // deleting a node with a single child
+    if (!currentNode.left || !currentNode.right) {
+      const child = currentNode.left || currentNode.right; // The non-null child
+      if (!parent) {
+        this.root = child; // Deleting the root node
+      } else if (value < parent.data) {
+        parent.left = child;
       } else {
-        currentNode = currentNode.right;
+        parent.right = child;
       }
-      if (currentNode.data > parent.data) {
-        parent.right = currentNode;
-      } else {
-        parent.left = currentNode;
-      }
+      return;
     }
     //deleting a node having both children
     if (currentNode.left && currentNode.right) {
@@ -115,6 +104,23 @@ class Tree {
       currentNode.data = successor.data;
       successorParent.left = null;
     }
+  }
+  findNodeAndParent(value) {
+    let currentNode = this.root;
+    let parent = null;
+    while(currentNode && currentNode.data !== value) {
+      parent = currentNode;
+      if (value < currentNode.data) {
+        currentNode = currentNode.left;
+      } else {
+        currentNode = currentNode.right;
+      }
+    }
+    return { currentNode, parent };
+  }
+  find(value) {
+    const { currentNode } = this.findNodeAndParent(value)
+    return currentNode;
   }
 }
 
@@ -139,5 +145,6 @@ tree.insert(6)
 tree.insert(9)
 tree.insert(1)
 tree.insert(8)
-tree.deleteItem(5)
+// tree.deleteItem(5)
+console.log(tree.find(2))
 prettyPrint(tree.root);
