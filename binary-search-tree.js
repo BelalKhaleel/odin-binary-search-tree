@@ -72,6 +72,50 @@ class Tree {
       parent.right = newNode;
     }
   }
+  deleteItem(value) {
+    let currentNode = this.root;
+    let parent = null;
+    while(currentNode.data !== value) {
+      parent = currentNode;
+      if (value < currentNode.data) {
+        currentNode = currentNode.left;
+      } else {
+        currentNode = currentNode.right;
+      }
+    }
+    //deleting a leaf node
+    if (!currentNode.left && !currentNode.right) {
+      if (value < parent.data) {
+        parent.left = null;
+      } else {
+        parent.right = null;
+      }   
+    }
+    //deleting a node with a single child
+    if ( (currentNode.left && !currentNode.right) || (!currentNode.left && currentNode.right) ) {
+      if(currentNode.left) {
+        currentNode = currentNode.left;
+      } else {
+        currentNode = currentNode.right;
+      }
+      if (currentNode.data > parent.data) {
+        parent.right = currentNode;
+      } else {
+        parent.left = currentNode;
+      }
+    }
+    //deleting a node having both children
+    if (currentNode.left && currentNode.right) {
+      let successor = currentNode.right;
+      let successorParent = null;
+      while (successor !== null && successor.left !== null) {
+          successorParent = successor;
+          successor = successor.left;
+      }
+      currentNode.data = successor.data;
+      successorParent.left = null;
+    }
+  }
 }
 
 const prettyPrint = (node, prefix = "", isLeft = true) => {
@@ -87,8 +131,13 @@ const prettyPrint = (node, prefix = "", isLeft = true) => {
   }
 };
 
-const tree = new Tree([5, 2, 8]);
+const tree = new Tree([5, 2, 7, 10]);
 
 tree.insert(4)
 tree.insert(3)
+tree.insert(6)
+tree.insert(9)
+tree.insert(1)
+tree.insert(8)
+tree.deleteItem(5)
 prettyPrint(tree.root);
