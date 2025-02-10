@@ -20,36 +20,32 @@ class Tree {
     let mid = Math.floor((n - 1) / 2);
     let root = new Node(array[mid]);
   
-    let q = [ {node : root, range : [ 0, n - 1 ]} ];
+    let queue = [ {node : root, range : [ 0, n - 1 ]} ];
     let frontIndex = 0;
   
-    while (frontIndex < q.length) {
-        let front = q[frontIndex];
+    while (frontIndex < queue.length) {
+        let front = queue[frontIndex];
         let curr = front.node;
-        let [s, e] = front.range;
-        let index = s + Math.floor((e - s) / 2);
+        let [start, end] = front.range;
+        let index = start + Math.floor((end - start) / 2);
   
         // If left subtree exists
-        if (s < index) {
-            let midLeft
-                = s + Math.floor((index - 1 - s) / 2);
+        if (start < index) {
+            let midLeft = start + Math.floor((index - 1 - start) / 2);
             let left = new Node(array[midLeft]);
             curr.left = left;
-            q.push({node : left, range : [ s, index - 1 ]});
+            queue.push({node : left, range : [ start, index - 1 ]});
         }
   
         // If right subtree exists
-        if (e > index) {
-            let midRight
-                = index + 1
-                  + Math.floor((e - index - 1) / 2);
+        if (end > index) {
+            let midRight = index + 1 + Math.floor((end - index - 1) / 2);
             let right = new Node(array[midRight]);
             curr.right = right;
-            q.push(
-                {node : right, range : [ index + 1, e ]}
+            queue.push(
+                {node : right, range : [ index + 1, end ]}
               );
         }
-  
         frontIndex++;
       }
       return root;
@@ -123,12 +119,7 @@ class Tree {
     return currentNode;
   }
   levelOrder(callback) {
-    if (!this.root) {
-      throw new Error("The tree is empty.");
-    }
-    if (typeof callback !== 'function') {
-      throw new Error("A callback is required as argument for this function.");
-    }
+    this.checkForRootAndCallback(callback);
     const queue = [this.root];
     while(queue.length > 0) {
       const currentNode = queue.shift();
@@ -139,6 +130,80 @@ class Tree {
       if (currentNode.right !== null) {
         queue.push(currentNode.right);
       }
+    }
+  }
+  inOrder(callback) {
+    this.checkForRootAndCallback(callback);
+    const stack = [];
+    let currentNode = this.root;
+    while(currentNode !== null || stack.length > 0) {
+      while(currentNode !== null) {
+        stack.push(currentNode);
+        currentNode = currentNode.left;
+      }
+      currentNode = stack.pop();
+      callback(currentNode);
+      currentNode = currentNode.right;
+    }
+  } 
+  preOrder(callback) {
+    this.checkForRootAndCallback(callback);
+    const stack = [this.root];
+    while(stack.length > 0) {
+      const topNode = stack.pop();
+      callback(topNode);
+      if (topNode.right !== null) {
+        stack.push(topNode.right);
+      }
+      if (topNode.left !== null) {
+        stack.push(topNode.left);
+      }
+    }
+  }
+  postOrder(callback) {//13426891075
+    this.checkForRootAndCallback(callback);
+    const stack = [this.root];
+    const list = [];
+    let prev = null;
+    while (stack.length !== 0 ) {
+      let current = stack[stack.length - 1];
+      /* go down the tree in search of a leaf and if so process it
+      and pop stack otherwise move down */
+      if (prev === null || prev.left === current || prev.right === current) {
+        if (current.left !== null) {
+          stack.push(current.left);
+        } else if (current.right !== null) {
+          stack.push(current.right);
+        } else {
+          stack.pop();
+          list.push(current);
+        }
+        /* go up the tree from left node, if the child is right
+        push it onto stack otherwise process parent and pop
+        stack */
+      } else if (current.left === prev) {
+        if (current.right !== null) {
+          stack.push(current.right);
+        } else {
+          stack.pop();
+          list.push(current);
+        }
+          /* go up the tree from right node and after coming back
+          from right node process parent and pop stack */
+      } else if (current.right === prev) {
+          stack.pop();
+          list.push(current);
+      }
+      prev = current;
+    }
+    list.forEach(element => callback(element));
+  }
+  checkForRootAndCallback(callback) {
+    if (!this.root) {
+      throw new Error("The tree is empty.");
+    }
+    if (typeof callback !== 'function') {
+      throw new Error("A callback is required as argument for this function.");
     }
   }
 }
@@ -168,4 +233,4 @@ tree.insert(8)
 // console.log(tree.find(2))
 prettyPrint(tree.root);
 
-tree.levelOrder(node => console.log(node.data));
+tree.postOrder(node => console.log(node.data));
