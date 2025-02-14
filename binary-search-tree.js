@@ -160,7 +160,7 @@ class Tree {
       }
     }
   }
-  postOrder(callback) {//13426891075
+  postOrder(callback) {
     this.checkForRootAndCallback(callback);
     const stack = [this.root];
     const list = [];
@@ -198,6 +198,29 @@ class Tree {
     }
     list.forEach(element => callback(element));
   }
+  height(node) {
+    if (node === null) {
+      return -1;
+    }
+    let leftHeight = this.height(node.left);
+    let rightHeight = this.height(node.right);
+    return 1 + Math.max(leftHeight, rightHeight);
+  }
+  depth(node) {
+    let currentNode = this.root;
+    if(!currentNode) return -1;
+    let depth = 0;
+    while(currentNode && currentNode.data !== node.data) {
+      if (node.data < currentNode.data) {
+        currentNode = currentNode.left;
+        depth++;
+      } else {
+        currentNode = currentNode.right;
+        depth++;
+      }
+    }
+    return currentNode ? depth : -1;
+  }
   checkForRootAndCallback(callback) {
     if (!this.root) {
       throw new Error("The tree is empty.");
@@ -233,4 +256,5 @@ tree.insert(8)
 // console.log(tree.find(2))
 prettyPrint(tree.root);
 
-tree.postOrder(node => console.log(node.data));
+// tree.postOrder(node => console.log(node.data));
+console.log(tree.depth({data: 20, left: null, right: null}));
