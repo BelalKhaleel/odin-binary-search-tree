@@ -10,53 +10,52 @@ class Tree {
   constructor(array) {
     this.root = this.buildTree(array);
   }
-   buildTree(array) {
+  buildTree(array) {
     array = [...(new Set(array))].sort((a, b) => a - b);
     let n = array.length;
   
     if (n === 0)
-        return null;
+      return null;
   
     let mid = Math.floor((n - 1) / 2);
     let root = new Node(array[mid]);
   
     let queue = [ {node : root, range : [ 0, n - 1 ]} ];
     let frontIndex = 0;
-  
+    
     while (frontIndex < queue.length) {
-        let front = queue[frontIndex];
-        let curr = front.node;
-        let [start, end] = front.range;
-        let index = start + Math.floor((end - start) / 2);
-  
-        // If left subtree exists
-        if (start < index) {
-            let midLeft = start + Math.floor((index - 1 - start) / 2);
-            let left = new Node(array[midLeft]);
-            curr.left = left;
-            queue.push({node : left, range : [ start, index - 1 ]});
-        }
-  
-        // If right subtree exists
-        if (end > index) {
-            let midRight = index + 1 + Math.floor((end - index - 1) / 2);
-            let right = new Node(array[midRight]);
-            curr.right = right;
-            queue.push(
-                {node : right, range : [ index + 1, end ]}
-              );
-        }
-        frontIndex++;
+      let front = queue[frontIndex];
+      let curr = front.node;
+      let [start, end] = front.range;
+      let index = start + Math.floor((end - start) / 2);
+      
+      // If left subtree exists
+      if (start < index) {
+        let midLeft = start + Math.floor((index - 1 - start) / 2);
+        let left = new Node(array[midLeft]);
+        curr.left = left;
+        queue.push({node : left, range : [ start, index - 1 ]});
       }
-      return root;
+      
+      // If right subtree exists
+      if (end > index) {
+        let midRight = index + 1 + Math.floor((end - index - 1) / 2);
+        let right = new Node(array[midRight]);
+        curr.right = right;
+        queue.push(
+          {node : right, range : [ index + 1, end ]}
+        );
+      }
+      frontIndex++;
+    }
+    return root;
   }
-  insert(value) {
-    const newNode = new Node(value);
-    const { parent } = this.findNodeAndParent(value);
-    if (value < parent.data) {
-      parent.left = newNode;
-    } else {
-      parent.right = newNode;
+  checkForRootAndCallback(callback) {
+    if (!this.root) {
+      throw new Error("The tree is empty.");
+    }
+    if (typeof callback !== 'function') {
+      throw new Error("A callback is required as argument for this function.");
     }
   }
   deleteItem(value) {
@@ -94,12 +93,27 @@ class Tree {
       let successor = currentNode.right;
       let successorParent = null;
       while (successor !== null && successor.left !== null) {
-          successorParent = successor;
-          successor = successor.left;
+        successorParent = successor;
+        successor = successor.left;
       }
       currentNode.data = successor.data;
       successorParent.left = null;
     }
+  }
+  depth(node) {
+    let currentNode = this.root;
+    if(!currentNode) return -1;
+    let depth = 0;
+    while(currentNode && currentNode.data !== node.data) {
+      if (node.data < currentNode.data) {
+        currentNode = currentNode.left;
+        depth++;
+      } else {
+        currentNode = currentNode.right;
+        depth++;
+      }
+    }
+    return currentNode ? depth : -1;
   }
   findNodeAndParent(value) {
     let currentNode = this.root;
@@ -118,19 +132,13 @@ class Tree {
     const { currentNode } = this.findNodeAndParent(value)
     return currentNode;
   }
-  levelOrder(callback) {
-    this.checkForRootAndCallback(callback);
-    const queue = [this.root];
-    while(queue.length > 0) {
-      const currentNode = queue.shift();
-      callback(currentNode);
-      if (currentNode.left !== null) {
-        queue.push(currentNode.left);
-      }
-      if (currentNode.right !== null) {
-        queue.push(currentNode.right);
-      }
+  height(node) {
+    if (node === null) {
+      return -1;
     }
+    let leftHeight = this.height(node.left);
+    let rightHeight = this.height(node.right);
+    return 1 + Math.max(leftHeight, rightHeight);
   }
   inOrder(callback) {
     this.checkForRootAndCallback(callback);
@@ -146,6 +154,48 @@ class Tree {
       currentNode = currentNode.right;
     }
   } 
+  insert(value) {
+    const newNode = new Node(value);
+    const { parent } = this.findNodeAndParent(value);
+    if (value < parent.data) {
+      parent.left = newNode;
+    } else {
+      parent.right = newNode;
+    }
+  }
+  isBalanced(node = this.root) {
+    const checkHeight = (node) => {
+      if (!node) return 0; // Base case: height of null node is 0
+  
+      let leftHeight = checkHeight(node.left);
+      if (leftHeight === -1) return -1; // Propagate failure
+  
+      let rightHeight = checkHeight(node.right);
+      if (rightHeight === -1) return -1; // Propagate failure
+  
+      if (Math.abs(leftHeight - rightHeight) > 1) {
+        return -1; // Tree is unbalanced
+      }
+  
+      return Math.max(leftHeight, rightHeight) + 1;
+    };
+  
+    return checkHeight(node) !== -1;
+  }
+  levelOrder(callback) {
+    this.checkForRootAndCallback(callback);
+    const queue = [this.root];
+    while(queue.length > 0) {
+      const currentNode = queue.shift();
+      callback(currentNode);
+      if (currentNode.left !== null) {
+        queue.push(currentNode.left);
+      }
+      if (currentNode.right !== null) {
+        queue.push(currentNode.right);
+      }
+    }
+  }
   preOrder(callback) {
     this.checkForRootAndCallback(callback);
     const stack = [this.root];
@@ -198,36 +248,10 @@ class Tree {
     }
     list.forEach(element => callback(element));
   }
-  height(node) {
-    if (node === null) {
-      return -1;
-    }
-    let leftHeight = this.height(node.left);
-    let rightHeight = this.height(node.right);
-    return 1 + Math.max(leftHeight, rightHeight);
-  }
-  depth(node) {
-    let currentNode = this.root;
-    if(!currentNode) return -1;
-    let depth = 0;
-    while(currentNode && currentNode.data !== node.data) {
-      if (node.data < currentNode.data) {
-        currentNode = currentNode.left;
-        depth++;
-      } else {
-        currentNode = currentNode.right;
-        depth++;
-      }
-    }
-    return currentNode ? depth : -1;
-  }
-  checkForRootAndCallback(callback) {
-    if (!this.root) {
-      throw new Error("The tree is empty.");
-    }
-    if (typeof callback !== 'function') {
-      throw new Error("A callback is required as argument for this function.");
-    }
+  rebalance() {
+    const newArray = [];
+    this.inOrder(node => newArray.push(node.data));
+    this.root = this.buildTree(newArray);
   }
 }
 
@@ -254,7 +278,9 @@ tree.insert(1)
 tree.insert(8)
 // tree.deleteItem(5)
 // console.log(tree.find(2))
-prettyPrint(tree.root);
+// prettyPrint(tree.root);
 
 // tree.postOrder(node => console.log(node.data));
-console.log(tree.depth({data: 20, left: null, right: null}));
+tree.rebalance();
+console.log(tree.isBalanced());
+prettyPrint(tree.root);
